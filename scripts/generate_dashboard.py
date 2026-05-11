@@ -972,14 +972,20 @@ def main():
     parser = argparse.ArgumentParser(description="Generate clo-author project dashboard")
     parser.add_argument("--project-root", default=".", help="Project root directory")
     parser.add_argument("--output", default=None, help="Output HTML file path")
+    parser.add_argument("--fresh", action="store_true",
+                        help="Overwrite entire file (default: incremental update)")
     args = parser.parse_args()
 
     root = find_project_root(args.project_root)
     output = Path(args.output) if args.output else root / "project_dashboard.html"
 
-    html = build_dashboard(root)
-    output.write_text(html)
-    print(f"Dashboard generated: {output}")
+    if output.exists() and not args.fresh:
+        print(f"Dashboard exists — skipping (hand-crafted content preserved)")
+        print(f"  Use --fresh to overwrite, or edit {output.name} directly")
+    else:
+        html = build_dashboard(root)
+        output.write_text(html)
+        print(f"Dashboard generated: {output}")
 
 
 if __name__ == "__main__":
