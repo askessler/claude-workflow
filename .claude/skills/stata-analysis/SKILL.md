@@ -18,7 +18,7 @@ Run an end-to-end Stata analysis: write script → verify → review → mirror.
 - **Follow Stata code conventions** in `.claude/rules/stata-code-conventions.md`
 - **Follow quality gates** in `.claude/rules/quality-gates.md` (Stata section)
 - **Save all scripts** to `scripts/stata/` with the project's numeric naming convention
-- **Mirror every script** to `/Users/anke/pCloud Drive/papers/vote suppression new/do files/` after writing
+- **No mirror needed** — authoritative scripts live in `scripts/stata/`; old mirror path (`vote suppression new/`) is archived
 - **Run in batch mode** via the `/tmp/stata_run.do` wrapper — never run interactively
 - **Check the log** after every run — do not assume success without reading the output
 
@@ -30,12 +30,21 @@ Run an end-to-end Stata analysis: write script → verify → review → mirror.
 
 **Before writing any code**, produce a Pre-Flight Report. This prevents hallucinated variable names and ensures project conventions are applied.
 
+**Load Stata reference files first.** Use the `Skill` tool to invoke `anthropic-skills:stata` and read the 1–3 reference files most relevant to this task (routing table is in the skill). For regressions: always read `references/difference-in-differences.md` or `references/linear-regression.md`. For inference: read `references/bootstrap-simulation.md`. For panel data: read `references/panel-data.md`. Do this before writing any code.
+
+```
+Skill({ skill: "anthropic-skills:stata", args: "[relevant topic, e.g. 'difference-in-differences bootstrap']" })
+```
+
 Output block (in your response, before Phase 1):
 
 ```markdown
 ## Pre-Flight Report
 
 **Task:** [one sentence restating what the user asked for]
+
+**Stata references loaded:**
+- `anthropic-skills:stata` — [which reference files were read]
 
 **Scripts to read / reference:**
 - [list any existing scripts that this one builds on]
@@ -76,10 +85,11 @@ Run the script in batch mode:
 
 ```bash
 cat > /tmp/stata_run.do << 'EOF'
-cd "/Users/anke/pCloud Drive/papers/vote suppression new"
 do "/Users/anke/pCloud Drive/papers/vote-suppression/scripts/stata/SCRIPT.do"
 EOF
-/Applications/Stata/StataMP.app/Contents/MacOS/stata-mp -b do /tmp/stata_run.do
+cd "/Users/anke/pCloud Drive/papers/vote-suppression" && \
+/Applications/Stata/StataSE.app/Contents/MacOS/stata-se -b do /tmp/stata_run.do
+cat "/Users/anke/pCloud Drive/papers/vote-suppression/stata_run.log"
 ```
 
 **Check the log for:**
@@ -93,29 +103,29 @@ If verification fails: diagnose the error from the log → fix the script → re
 
 ### Phase 3: Review
 
-After a clean run, apply the Stata quality rubric from `.claude/rules/quality-gates.md`:
+Dispatch a `coder-critic` subagent via the Task tool to review the script:
 
 ```
-[ ] No errors in log
-[ ] No unexpected dropped variables
-[ ] Sample size matches expectation (document actual N)
-[ ] All new variables labeled
-[ ] Cluster SE at state level confirmed
-[ ] Bootstrap seed specified (if applicable)
-[ ] Mirror rule ready to execute
+Task({
+  subagent_type: "coder-critic",
+  description: "Review Stata script for quality and correctness",
+  prompt: "Review the Stata script at [path to .do file]. Read the script in full and the run log at [path to log]. Score against the following rubric (start at 100, deduct per issue found):
+
+  CRITICAL (-20 each): errors in log, dropped variables due to collinearity, wrong cluster level, hardcoded absolute paths
+  MAJOR (-10 each): missing variable labels, unexpected sample size, no missing value guards on comparisons, set.seed absent when bootstrap used
+  MINOR (-5 each): style issues, unclear comments, non-standard section headers
+
+  Report: score, list of issues by severity, specific line numbers where possible."
+})
 ```
 
-Report any Critical or Major issues. Minor issues may be flagged for follow-up.
+Wait for the critic's score. If score < 80: fix all Critical and Major issues, re-run (Phase 2), re-dispatch critic. Max 2 rounds before surfacing to user.
+
+If score >= 80: proceed to Phase 4.
 
 ### Phase 4: Mirror
 
-Mirror the script to the data folder:
-
-```bash
-cp "scripts/stata/FILENAME.do" "/Users/anke/pCloud Drive/papers/vote suppression new/do files/FILENAME.do"
-```
-
-Confirm the copy succeeded. This is **mandatory** before any commit.
+No mirror required — the authoritative script location is `scripts/stata/` in the project folder. The old mirror path (`vote suppression new/do files/`) is being archived and should not be used.
 
 ### Phase 5: Present Results
 

@@ -1,13 +1,15 @@
 ---
 paths:
   - "scripts/**/*.R"
+  - "scripts/**/*.do"
   - "explorations/**"
   - "Figures/**/*.R"
+  - "paper/figures/**"
 ---
 
 # Research Project Orchestrator (Simplified)
 
-**For R scripts, simulations, and data analysis** -- use this simplified loop instead of the full multi-agent orchestrator.
+**For R scripts, Stata scripts, simulations, and data analysis** — use this simplified loop instead of the full multi-agent orchestrator.
 
 ## The Simple Loop
 
@@ -33,10 +35,20 @@ Plan approved → orchestrator activates
 
 ## Verification Checklist
 
+### R scripts
 - [ ] Script runs without errors
 - [ ] All packages loaded at top
 - [ ] No hardcoded absolute paths
 - [ ] `set.seed()` once at top if stochastic
 - [ ] Output files created at expected paths
 - [ ] Tolerance checks pass (if applicable)
+- [ ] Quality score >= 80
+
+### Stata scripts
+- [ ] Script runs without errors (check log — exit code 0 is not enough)
+- [ ] No unexpected dropped variables or observations
+- [ ] Sample size matches expectation (document actual N)
+- [ ] All new variables labeled
+- [ ] Cluster SE at correct level confirmed
+- [ ] Bootstrap seed specified (if applicable)
 - [ ] Quality score >= 80
