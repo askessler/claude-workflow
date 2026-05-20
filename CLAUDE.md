@@ -12,6 +12,35 @@
 
 ---
 
+## Session Start Protocol (Multi-Device Sync)
+
+**Run this at the start of every session, on every device, before doing anything else.**
+
+All project files live in pCloud and sync automatically across devices. The `.claude/projects/` memory folder is device-local and will be empty on a new device — pCloud is the source of truth.
+
+### Step 1 — Read the project sync file
+Every project has a `SESSION_SYNC.md` in its root folder (e.g., `papers/vote-suppression/SESSION_SYNC.md`). Read it first. It contains: current state, key results, immediate next steps, and pointers to detailed logs.
+
+### Step 2 — Read the tail of SESSION_REPORT.md
+`pCloud Drive/claude/shared/SESSION_REPORT.md` — read the last 1–2 entries for recent cross-project context.
+
+### Step 3 — Read the most recent session log
+`pCloud Drive/claude/shared/quality_reports/session_logs/` — read the most recent file for detailed context on the last session.
+
+### Step 4 — Read the project CLAUDE.md
+The project-specific `CLAUDE.md` (e.g., `papers/vote-suppression/CLAUDE.md`) for folder structure, variable definitions, script status, and run commands.
+
+### What syncs via pCloud (safe across devices)
+- All project files under `pCloud Drive/papers/`
+- Shared skills, rules, agents under `pCloud Drive/claude/shared/`
+- `SESSION_SYNC.md`, `SESSION_REPORT.md`, session logs, vault files
+
+### What does NOT sync (device-local)
+- `.claude/projects/` memory files — Claude Code stores these locally; they will be absent on a new device
+- Stata, R, Python installations and paths — verify before running scripts
+
+---
+
 ## Core Principles
 
 - **Plan first** -- enter plan mode before non-trivial tasks; save plans to `quality_reports/plans/`
